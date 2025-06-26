@@ -1,0 +1,6 @@
+@Innotm_API_project_HostAddress = http://localhost:5045
+
+GET {{Innotm_API_project_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
