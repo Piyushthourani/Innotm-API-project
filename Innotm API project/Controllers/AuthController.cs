@@ -63,5 +63,35 @@ namespace Innotm_API_project.Controllers
             }
             return response;
         }
+
+        [HttpPost("login")]
+        public ApiResponse Login(LoginDto dto)
+        {
+            ApiResponse response = new ApiResponse();
+            try
+            {
+                var user = _context.Users.FirstOrDefault(u => u.PhoneNumber == dto.PhoneNumber && u.Password == dto.Password);
+                if (user == null)
+                {
+                    response.Result = null;
+                    response.Response = "Invalid phone number or password";
+                    response.ResponseCode = "401";
+                    return response;
+                }
+                else
+                {
+                    response.Result = user;
+                    response.Response = "Login Successfully!";
+                    response.ResponseCode = "200";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.Result = null;
+                response.Response = "Bad Request! " + ex.Message;
+                response.ResponseCode = "400";
+            }
+            return response;
+        }
     }
 }
