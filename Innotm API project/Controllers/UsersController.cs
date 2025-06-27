@@ -79,6 +79,41 @@ namespace Innotm_API_project.Controllers
             }
             return response;
         }
-        
+
+        [HttpGet("basic-list")]
+        public UserResponse GetBasicUserList()
+        {
+            UserResponse response = new UserResponse();
+            try
+            {
+                var users = _context.Users.Select(u => new CustomDto
+                {
+                    UserId = u.UserId,
+                    Username = u.Username,
+                    PhoneNumber = u.PhoneNumber
+                }).ToList();
+                if (users == null)
+                {
+                    response.Result = null;
+                    response.Response = "Only admins can access this";
+                    response.ResponseCode = "401";
+                    return response;
+                }
+                else
+                {
+                    
+                    response.Result = users;
+                    response.Response = "Records fetched successfully";
+                    response.ResponseCode = "200";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.Result = null;
+                response.Response = "Bad Request!" + ex.Message;
+                response.ResponseCode = "400";
+            }
+            return response;
+        }
     }
 }
