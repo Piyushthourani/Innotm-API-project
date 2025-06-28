@@ -19,45 +19,59 @@ namespace Innotm_API_project.Controllers
         public TransactionResponse GetHistory(string phoneNumber)
         {
             TransactionResponse response = new TransactionResponse();
+            List<TransactionCustom> retlist = new List<TransactionCustom>();
+            TransactionCustom obj = new TransactionCustom();
             try
             {
                 var user = _context.Users.FirstOrDefault(u => u.PhoneNumber == phoneNumber);
-                if(user==null)
+                if (user == null)
                 {
                     response.Result = null;
                     response.Response = "User not found";
-                    response.ResponseCode = "404";
+                    response.ResponseCode = "200";
                     return response;
                 }
-                var transactions = _context.Transactions.Where(t => t.UserId == user.UserId || t.ReceiverId == user.UserId).OrderByDescending(t => t.TransactionDate).ToList();
-                response.Result = transactions.Select(t => new TransactionCustom
+                else
                 {
-                    TransactionId = t.TransactionId,
-                    UserId = t.UserId,
-                    ReceiverId = t.ReceiverId,
-                    ReceiverName = user.Username,
-                    ReceiverPhoneNumber = user.PhoneNumber,
-                    TransactionType = t.TransactionType,
-                    TransactionDate = t.TransactionDate,
-                    InitialAmount = t.InitialAmount,
-                    TransferAmount = t.TransferAmount,
-                }).ToList();
-                response.Response = "Successfully fetched history";
-                response.ResponseCode = "200";
+                    var transactions = _context.Transactions.Where(t => t.UserId == user.UserId).OrderByDescending(t => t.TransactionDate).ToList();
+                    foreach (var transaction in transactions)
+                    {
+                        obj = new TransactionCustom();
+                        var Receiver = _context.Users.Where(rec => rec.UserId == transaction.ReceiverId).FirstOrDefault();
+                        obj.TransactionId = transaction.TransactionId;
+                        obj.UserId = transaction.UserId;
+                        obj.ReceiverId = transaction.ReceiverId;
+                        obj.ReceiverName = Receiver.Username;
+                        obj.ReceiverPhoneNumber = Receiver.PhoneNumber;
+                        obj.TransactionType = transaction.TransactionType;
+                        obj.TransactionDate = transaction.TransactionDate;
+                        obj.InitialAmount = transaction.InitialAmount;
+                        obj.TransferAmount = transaction.TransferAmount;
+
+                        retlist.Add(obj);
+
+                    }
+                    response.Result = retlist;
+                    response.Response = "Successfully fetched history";
+                    response.ResponseCode = "200";
+                    return response;
+
+                }
+                   
             }
             catch (Exception ex)
             {
                 response.Result = null;
-                response.Response = "An error occured " + ex.Message;
+                response.Response =  ex.Message;
                 response.ResponseCode = "400";
             }
             return response;
         }
 
         [HttpPost("pay")]
-        public TransactionResponse MakePayment(PayMoneyDto dto)
+        public ApiResponse MakePayment(PayMoneyDto dto)
         {
-            TransactionResponse response = new TransactionResponse();
+            ApiResponse response = new ApiResponse();
             try
             {
                 var sender = _context.Users.FirstOrDefault(u => u.PhoneNumber == dto.senderPhoneNumber);
@@ -65,7 +79,7 @@ namespace Innotm_API_project.Controllers
                 {
                     response.Result = null;
                     response.Response = "User not found";
-                    response.ResponseCode = "404";
+                    response.ResponseCode = "200";
                     return response;
                 }
                 var receiver = _context.Users.FirstOrDefault(u => u.PhoneNumber == dto.receiverPhoneNumber);
@@ -73,45 +87,43 @@ namespace Innotm_API_project.Controllers
                 {
                     response.Result = null;
                     response.Response = "Receiver not found";
-                    response.ResponseCode = "404";
+                    response.ResponseCode = "200";
                     return response;
                 }
                 if (sender.Amount < dto.Amount)
                 {
                     response.Result = null;
                     response.Response = "Insufficient balance";
-                    response.ResponseCode = "400";
+                    response.ResponseCode = "200";
                     return response;
                 }
+                decimal senderinitial = sender.Amount;
+                decimal receiverinitial = receiver.Amount;
                 sender.Amount -= dto.Amount;
                 receiver.Amount += dto.Amount;
-                var transaction = new Transaction
+                var senderTransaction = new Transaction
                 {
                     UserId = sender.UserId,
                     ReceiverId = receiver.UserId,
                     TransactionType = "Debit",
                     TransactionDate = DateTime.UtcNow,
-                    InitialAmount = sender.Amount + dto.Amount,
+                    InitialAmount = senderinitial,
                     TransferAmount = dto.Amount
                 };
-                _context.Transactions.Add(transaction);
-                _context.SaveChanges();
-                response.Result = new List<TransactionCustom>
+                var receiverTransaction = new Transaction
                 {
-                    new TransactionCustom
-                    {
-                        TransactionId = transaction.TransactionId,
-                        UserId = transaction.UserId,
-                        ReceiverId = transaction.ReceiverId,
-                        ReceiverName = receiver.Username,
-                        ReceiverPhoneNumber = receiver.PhoneNumber,
-                        TransactionType = transaction.TransactionType,
-                        TransactionDate = transaction.TransactionDate,
-                        InitialAmount = transaction.InitialAmount,
-                        TransferAmount = transaction.TransferAmount
-                    }
+                    UserId = receiver.UserId,
+                    ReceiverId = sender.UserId,
+                    TransactionType = "Credit",
+                    TransactionDate = DateTime.UtcNow,
+                    InitialAmount = receiverinitial,
+                    TransferAmount = dto.Amount
                 };
-                
+                _context.Transactions.Add(senderTransaction);
+                _context.Transactions.Add(receiverTransaction);
+                _context.SaveChanges();
+                response.Result = null;
+
                 response.Response = "Payment successful";
                 response.ResponseCode = "200";
             }
@@ -124,5 +136,60 @@ namespace Innotm_API_project.Controllers
             return response;
         }
 
+        [HttpDelete("DeleteTransactionById")]
+
+        public TransactionResponse DeleteTransactionById(int Tid)
+        {
+            TransactionResponse response = new TransactionResponse();
+            try
+            {
+                var transaction = _context.Transactions.FirstOrDefault(t => t.TransactionId == Tid);
+                _context.Transactions.RemoveRange(transaction);
+                _context.SaveChanges();
+                response.Result = null;
+                response.Response = "Transaction deleted successfully";
+                response.ResponseCode = "200";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Result = null;
+                response.Response = "An error occurred: " + ex.Message;
+                response.ResponseCode = "400";
+            }
+            return response;
+        }
+
+        [HttpDelete("DeleteHistory")]
+
+        public TransactionResponse DeleteHistory(string phoneNumber)
+        {
+            TransactionResponse response = new TransactionResponse();
+            try
+            {
+                var user = _context.Users.FirstOrDefault(u => u.PhoneNumber == phoneNumber);
+                if(user== null)
+                {
+                    response.Result = null;
+                    response.Response = "User not found";
+                    response.ResponseCode = "200";
+                    return response;
+                }
+                var transactions = _context.Transactions.Where(t => t.UserId == user.UserId);
+                _context.Transactions.RemoveRange(transactions);
+                _context.SaveChanges();
+                response.Result = null;
+                response.Response = "All transactions deleted successfully";
+                response.ResponseCode = "200";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Result = null;
+                response.Response =  ex.Message;
+                response.ResponseCode = "400";
+            }
+            return response;
+        }
     }
 }

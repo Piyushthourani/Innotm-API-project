@@ -25,7 +25,7 @@ namespace Innotm_API_project.Controllers
                 if(user == null)
                 {
                     response.Response = "User not found";
-                    response.ResponseCode = "404";
+                    response.ResponseCode = "200";
                     response.Amount = 0;
                     return response;
                 }
