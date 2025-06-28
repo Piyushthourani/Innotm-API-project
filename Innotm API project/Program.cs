@@ -26,16 +26,24 @@ builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
     .AllowAnyHeader();
 }));
 
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    //app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "innotm v1"));
 }
 
+
 app.UseHttpsRedirection();
+
+app.UseRouting();
+
+app.UseCors("CorsPolicy");
 
 app.UseAuthorization();
 
