@@ -35,9 +35,9 @@ namespace Innotm_API_project.Controllers
                     PhoneNumber = dto.PhoneNumber,
                     Gender = dto.Gender,
                     Password = dto.Password,
-                    ImageUrl = dto.ImageUrl,
+                    ImageUrl = "",
                     Amount = 0, // Default amount set to 0
-                    IsAdmin = dto.IsAdmin
+                    IsAdmin = false
                 };
                 try
                 {

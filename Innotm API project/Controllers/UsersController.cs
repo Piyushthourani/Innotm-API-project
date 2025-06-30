@@ -60,8 +60,8 @@ namespace Innotm_API_project.Controllers
                 if (user == null)
                 {
                     response.Result = null;
-                    response.Response = "Only admins can access this";
-                    response.ResponseCode = "401";
+                    response.Response = "User not found";
+                    response.ResponseCode = "200";
                     return response;
                 }
                 else
@@ -95,8 +95,8 @@ namespace Innotm_API_project.Controllers
                 if (users == null)
                 {
                     response.Result = null;
-                    response.Response = "Only admins can access this";
-                    response.ResponseCode = "401";
+                    response.Response = "User not found";
+                    response.ResponseCode = "200";
                     return response;
                 }
                 else
