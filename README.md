@@ -23,6 +23,7 @@ This is the backend Web API for the Innotm Digital Wallet Application. Built usi
 Innotm-API-project/
 ├── Controllers/
 │ ├── AuthController.cs
+│ ├── ChatController.cs
 │ ├── TransactionsController.cs
 │ ├── UsersController.cs
 │ ├── WalletController.cs
@@ -60,6 +61,7 @@ Innotm-API-project/
 | POST   | /api/Transactions/pay    | Send money to another user      |
 | GET    | /api/Users/balance       | Get user balance (by ID)        |
 | GET    | /api/Transactions/history| Get transaction history         |
+| GET    | /api/Chat/ask            | Prompt based transfers          |
 
 > 🧾 DTOs are used for request and response formatting in every major route.
 
